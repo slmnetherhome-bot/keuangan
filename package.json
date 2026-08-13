@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "env:base64": "node -e \"process.stdout.write(Buffer.from(require('fs').readFileSync('credentials/service-account.json')).toString('base64'))\""
   },
   "dependencies": {
     "googleapis": "^174.0.1",

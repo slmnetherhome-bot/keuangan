@@ -78,8 +78,53 @@ Struktur sheet (`Accounts`, `Transactions`, `Subscriptions`) akan dibuat otomati
 
 Saat transaksi baru dicatat dari satu perangkat, semua perangkat yang sudah subscribe akan menerima notifikasi.
 
+## Deploy ke Vercel
+
+> **Penting soal keamanan**: `credentials/` dan `.env.local` tidak di-commit ke git. Di Vercel tidak ada file lokal, jadi semua konfigurasi harus lewat **Environment Variables** di dashboard Vercel.
+
+### 1. Siapkan Environment Variables di Vercel
+
+Di **Vercel Dashboard → Project → Settings → Environment Variables**, tambahkan:
+
+| Nama | Nilai |
+|---|---|
+| `SPREADSHEET_ID` | ID spreadsheet Google Sheets kamu |
+| `GOOGLE_SERVICE_ACCOUNT_BASE64` | Isi kredensial service account dalam base64 (lihat cara di bawah) |
+| `NEXT_PUBLIC_VAPID_PUBLIC_KEY` | Public key VAPID |
+| `VAPID_PRIVATE_KEY` | Private key VAPID |
+| `VAPID_SUBJECT` | `mailto:email-anda@contoh.com` |
+
+Untuk menghasilkan `GOOGLE_SERVICE_ACCOUNT_BASE64` dari file `credentials/service-account.json`:
+
+```bash
+npm run env:base64
+```
+
+Salin output-nya ke kolom `GOOGLE_SERVICE_ACCOUNT_BASE64` di Vercel.
+
+### 2. Deploy
+
+Karena repo sudah terhubung ke GitHub, deploy otomatis terjadi setiap push ke `main`. Untuk deploy manual pertama:
+
+```bash
+npx vercel
+```
+
+Atau gunakan **Vercel Dashboard → Add New → Project → import** dari repo `slmnetherhome-bot/keuangan`.
+
+> Setiap perubahan di `vercel.json` (header `sw.js`, manifest, icon) otomatis diterapkan saat redeploy.
+
+### 3. Setelah Deploy
+
+1. Buka URL `https://<project>.vercel.app`.
+2. Pastikan Google Sheets API aktif & spreadsheet sudah di-share ke email service account.
+3. Install PWA & aktifkan notifikasi seperti pada Setup langkah 5.
+
+> Push notification hanya berjalan di HTTPS (Vercel otomatis menyediakannya).
+
 ## Script
 
 - `npm run dev` — development server
 - `npm run build` — build production
 - `npm run lint` — lint
+- `npm run env:base64` — generate base64 service account untuk env Vercel
