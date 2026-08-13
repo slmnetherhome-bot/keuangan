@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
+import { History } from "lucide-react";
 import type { Account, Transaction } from "@/lib/types";
 import TransactionForm from "@/components/TransactionForm";
-import TransactionList from "@/components/TransactionList";
 import { useRealtimeRefresh } from "@/components/useRealtimeRefresh";
 
 export default function TransactionsPage() {
@@ -49,6 +50,17 @@ export default function TransactionsPage() {
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold tracking-tight">Catat Transaksi</h1>
+        <Link
+          href="/history"
+          className="flex items-center gap-1.5 rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium transition-colors hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
+        >
+          <History className="h-4 w-4" />
+          Riwayat
+        </Link>
+      </div>
+
       <TransactionForm
         accounts={accounts}
         onSaved={() => setReloadKey((k) => k + 1)}
@@ -60,12 +72,14 @@ export default function TransactionsPage() {
         </p>
       )}
 
-      <div>
-        <h2 className="mb-3 font-semibold">
-          Daftar Transaksi ({transactions.length})
-        </h2>
-        <TransactionList transactions={transactions} />
-      </div>
+      {transactions.length > 0 && (
+        <p className="text-sm text-zinc-500">
+          Sudah tercatat {transactions.length} transaksi.{" "}
+          <Link href="/history" className="font-medium underline">
+            Lihat riwayat lengkap →
+          </Link>
+        </p>
+      )}
     </div>
   );
 }

@@ -175,7 +175,7 @@ export default function Dashboard() {
           <div className="flex items-center justify-between">
             <h2 className="font-semibold">Transaksi Terakhir</h2>
             <Link
-              href="/transactions"
+              href="/history"
               className="text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100"
             >
               Lihat semua <ArrowUpRight className="inline h-3.5 w-3.5" />

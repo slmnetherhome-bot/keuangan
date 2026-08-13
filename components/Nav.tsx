@@ -2,17 +2,19 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, ArrowLeftRight, Wallet } from "lucide-react";
+import { LayoutDashboard, ArrowLeftRight, History, Wallet } from "lucide-react";
 import NotificationToggle from "@/components/NotificationToggle";
 
 const links = [
   { href: "/", label: "Dashboard", Icon: LayoutDashboard },
   { href: "/transactions", label: "Transaksi", Icon: ArrowLeftRight },
+  { href: "/history", label: "Riwayat", Icon: History },
   { href: "/accounts", label: "Akun", Icon: Wallet },
 ];
 
 function getTitle(pathname: string): string {
   if (pathname.startsWith("/transactions")) return "Transaksi";
+  if (pathname.startsWith("/history")) return "Riwayat";
   if (pathname.startsWith("/accounts")) return "Akun";
   return "Dashboard";
 }
