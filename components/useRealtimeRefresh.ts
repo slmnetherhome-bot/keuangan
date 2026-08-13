@@ -13,7 +13,7 @@ interface UseRealtimeRefreshOptions {
  */
 export function useRealtimeRefresh(
   onRefresh: () => void,
-  { intervalMs = 10000 }: UseRealtimeRefreshOptions = {}
+  { intervalMs = 30000 }: UseRealtimeRefreshOptions = {}
 ) {
   const refreshRef = useRef(onRefresh);
 

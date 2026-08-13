@@ -4,6 +4,34 @@ import path from "path";
 import type { Account, Transaction } from "@/lib/types";
 
 let cachedClient: sheets_v4.Sheets | null = null;
+let structureChecked = false;
+let structurePromise: Promise<void> | null = null;
+
+interface CacheEntry<T> {
+  data: T;
+  expiresAt: number;
+}
+
+const readCache = new Map<string, CacheEntry<unknown>>();
+const CACHE_TTL_MS = 4000;
+
+function cacheGet<T>(key: string): T | null {
+  const entry = readCache.get(key);
+  if (!entry) return null;
+  if (Date.now() > entry.expiresAt) {
+    readCache.delete(key);
+    return null;
+  }
+  return entry.data as T;
+}
+
+function cacheSet(key: string, data: unknown): void {
+  readCache.set(key, { data, expiresAt: Date.now() + CACHE_TTL_MS });
+}
+
+function cacheInvalidate(key: string): void {
+  readCache.delete(key);
+}
 
 const SPREADSHEET_ID = process.env.SPREADSHEET_ID || "";
 
@@ -103,10 +131,22 @@ async function ensureSheet(
 }
 
 export async function ensureStructure(): Promise<void> {
+  if (structureChecked) return;
+  if (structurePromise) return structurePromise;
+
   const sheets = await getSheets();
-  await ensureSheet(sheets, "Accounts", ACCOUNTS_HEADERS);
-  await ensureSheet(sheets, "Transactions", TRANSACTIONS_HEADERS);
-  await ensureSheet(sheets, "Subscriptions", SUBSCRIPTIONS_HEADERS);
+  structurePromise = (async () => {
+    await ensureSheet(sheets, "Accounts", ACCOUNTS_HEADERS);
+    await ensureSheet(sheets, "Transactions", TRANSACTIONS_HEADERS);
+    await ensureSheet(sheets, "Subscriptions", SUBSCRIPTIONS_HEADERS);
+    structureChecked = true;
+  })();
+
+  try {
+    await structurePromise;
+  } finally {
+    structurePromise = null;
+  }
 }
 
 function rowsToObjects<T>(rows: string[][]): T[] {
@@ -127,6 +167,10 @@ function rowsToObjects<T>(rows: string[][]): T[] {
 }
 
 export async function readAccounts(): Promise<Account[]> {
+  const cacheKey = "accounts";
+  const cached = cacheGet<Account[]>(cacheKey);
+  if (cached) return cached;
+
   const sheets = await getSheets();
   await ensureStructure();
 
@@ -135,12 +179,19 @@ export async function readAccounts(): Promise<Account[]> {
     range: "Accounts!A:E",
   });
 
-  return rowsToObjects<Account>(res.data.values ?? []).map(
+  const data = rowsToObjects<Account>(res.data.values ?? []).map(
     (a) => ({ ...a, opening_balance: Number(a.opening_balance) || 0 })
   );
+
+  cacheSet(cacheKey, data);
+  return data;
 }
 
 export async function readTransactions(): Promise<Transaction[]> {
+  const cacheKey = "transactions";
+  const cached = cacheGet<Transaction[]>(cacheKey);
+  if (cached) return cached;
+
   const sheets = await getSheets();
   await ensureStructure();
 
@@ -149,10 +200,13 @@ export async function readTransactions(): Promise<Transaction[]> {
     range: "Transactions!A:I",
   });
 
-  return rowsToObjects<Transaction>(res.data.values ?? []).map((t) => ({
+  const data = rowsToObjects<Transaction>(res.data.values ?? []).map((t) => ({
     ...t,
     amount: Number(t.amount) || 0,
   }));
+
+  cacheSet(cacheKey, data);
+  return data;
 }
 
 export async function appendAccount(
@@ -177,6 +231,8 @@ export async function appendAccount(
       ],
     },
   });
+
+  cacheInvalidate("accounts");
 }
 
 export async function appendTransaction(
@@ -205,6 +261,8 @@ export async function appendTransaction(
       ],
     },
   });
+
+  cacheInvalidate("transactions");
 }
 
 export interface PushSubscriptionRow {
