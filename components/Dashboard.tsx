@@ -13,6 +13,7 @@ import type { Account, Transaction } from "@/lib/types";
 import { formatDate, formatIDR } from "@/lib/format";
 import { computeBalances } from "@/lib/balance";
 import PushNotification from "@/components/PushNotification";
+import { useRealtimeRefresh } from "@/components/useRealtimeRefresh";
 
 interface DashboardData {
   accounts: Account[];
@@ -22,6 +23,9 @@ interface DashboardData {
 export default function Dashboard() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
+
+  useRealtimeRefresh(() => setReloadKey((k) => k + 1));
 
   useEffect(() => {
     let cancelled = false;
@@ -56,7 +60,7 @@ export default function Dashboard() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [reloadKey]);
 
   if (error) {
     return (

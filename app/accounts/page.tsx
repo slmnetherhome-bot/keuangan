@@ -5,6 +5,7 @@ import { Plus } from "lucide-react";
 import type { Account, AccountType, Transaction } from "@/lib/types";
 import { formatIDR } from "@/lib/format";
 import { computeBalances } from "@/lib/balance";
+import { useRealtimeRefresh } from "@/components/useRealtimeRefresh";
 
 const TYPE_LABEL: Record<AccountType, string> = {
   cash: "Kas",
@@ -22,6 +23,8 @@ export default function AccountsPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
+
+  useRealtimeRefresh(() => setReloadKey((k) => k + 1));
 
   useEffect(() => {
     let cancelled = false;

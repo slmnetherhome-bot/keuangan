@@ -4,12 +4,15 @@ import { useEffect, useState } from "react";
 import type { Account, Transaction } from "@/lib/types";
 import TransactionForm from "@/components/TransactionForm";
 import TransactionList from "@/components/TransactionList";
+import { useRealtimeRefresh } from "@/components/useRealtimeRefresh";
 
 export default function TransactionsPage() {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
+
+  useRealtimeRefresh(() => setReloadKey((k) => k + 1));
 
   useEffect(() => {
     let cancelled = false;
